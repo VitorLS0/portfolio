@@ -25,7 +25,7 @@ function useScrolledPastHero() {
 
     // Shrink the viewport by everything that sticks to the top, so the swap
     // fires exactly as the hero slides under the stack.
-    const stickyH = ['.header'].reduce(
+    const stickyH = ['.header', '.wip'].reduce(
       (total, sel) => total + (document.querySelector(sel)?.getBoundingClientRect().height ?? 0),
       0,
     )

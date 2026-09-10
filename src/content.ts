@@ -132,6 +132,7 @@ type SkillGroup = { label: string; value: string }
 
 type Copy = {
   location: string
+  wip: string
   role: string
   bio: string
   facts: { label: string; value: string; accent?: boolean }[]
@@ -150,6 +151,7 @@ type Copy = {
 export const copy: Record<Lang, Copy> = {
   en: {
     location: 'Belo Horizonte, Brazil  /  Available for work',
+    wip: 'Work in progress',
     role: 'Full-stack developer',
     bio: 'Software Engineering graduate (PUC Minas, 2026). Two years building React and TypeScript frontends for healthcare systems, extending into Node.js backend work.',
     facts: [
@@ -178,6 +180,7 @@ export const copy: Record<Lang, Copy> = {
   },
   pt: {
     location: 'Belo Horizonte, Brasil  /  Disponível para trabalho',
+    wip: 'Em construção',
     role: 'Desenvolvedor full-stack',
     bio: 'Formado em Engenharia de Software (PUC Minas, 2026). Dois anos construindo interfaces em React e TypeScript para sistemas de saúde, agora avançando para back-end com Node.js.',
     facts: [

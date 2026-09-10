@@ -8,6 +8,7 @@
   --mono: 'JetBrains Mono', monospace;
   --gutter: clamp(20px, 5vw, 72px);
   --header-h: 52px;
+  --band-h: 30px;
 }
 
 * {
@@ -50,6 +51,7 @@ a:hover {
 
 .page {
   min-height: 100vh;
+  padding-top: calc(var(--header-h) + var(--band-h));
   background: var(--bg);
   color: var(--fg);
   font-family: var(--sans);
@@ -58,15 +60,17 @@ a:hover {
 /* ── Header ─────────────────────────────────────────────────────────────── */
 
 .header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: var(--header-h);
-  padding: 16px var(--gutter);
+  height: var(--header-h);
+  padding: 0 var(--gutter);
   background: rgba(10, 10, 10, 0.82);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--rule);
@@ -150,13 +154,72 @@ a:hover {
   color: var(--bg);
 }
 
+/* ── Work in progress band ─────────────────────────────────────────────── */
+
+.wip {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  z-index: 19;
+  display: flex;
+  align-items: center;
+  height: var(--band-h);
+  overflow: hidden;
+  background: rgba(10, 10, 10, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(242, 242, 239, 0.38);
+  user-select: none;
+}
+
+.wip__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: wipScroll 480s linear infinite;
+}
+
+.wip:hover .wip__track {
+  animation-play-state: paused;
+}
+
+.wip__group {
+  display: flex;
+}
+
+.wip__item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 20px;
+  white-space: nowrap;
+}
+
+.wip__mark {
+  font-size: 7px;
+  color: var(--accent);
+  opacity: 0.5;
+}
+
+/* Half the track is one full group, so this loops with no visible seam. */
+@keyframes wipScroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* ── Hero ───────────────────────────────────────────────────────────────── */
 
 .hero {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - var(--header-h));
-  min-height: calc(100svh - var(--header-h));
+  min-height: calc(100vh - var(--header-h) - var(--band-h));
+  min-height: calc(100svh - var(--header-h) - var(--band-h));
   padding: clamp(28px, 5vw, 64px) var(--gutter) clamp(28px, 4vw, 56px);
   border-bottom: 1px solid var(--rule);
 }
@@ -582,6 +645,10 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .wip__track {
+    animation: none;
+  }
+
   .header__reveal,
   .header__reveal > span {
     transition-duration: 1ms;
