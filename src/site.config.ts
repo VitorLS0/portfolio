@@ -9,6 +9,9 @@ export const identity = {
   github: "https://github.com/VitorLS0",
   linkedin: "https://www.linkedin.com/in/vitor-stahlberg/",
   resume: "/resume-en.pdf",
+  // Public address. Link previews need absolute URLs, so the share image and
+  // og:url are built from this (see vite.config.ts).
+  siteUrl: "https://vitorls.dev",
 };
 // ────────────────────────────────────────────────────────────────────────────
 
