@@ -17,4 +17,6 @@ export const settings = {
   showNumbers: true,
   singleOpen: true,
   timeZone: "America/Sao_Paulo",
+  // Hover model for projects that don't set their own `model`.
+  defaultModel: "/the_thinker_by_auguste_rodin.glb",
 };

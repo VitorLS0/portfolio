@@ -320,6 +320,7 @@ a:hover {
 }
 
 .work__list {
+  position: relative; /* anchors .work__object */
   border-top: 1px solid var(--rule-strong);
 }
 
@@ -377,25 +378,33 @@ a:hover {
   color: rgba(242, 242, 239, 0.45);
 }
 
-/* Reserved lane for the per-project 3D object. Swap the inner content for a
-   model viewer; the box geometry and hover motion stay as-is. */
-.row__object {
+/* Shared 3D object (see RowObject.tsx). Work.tsx sets `top` to the centre of
+   the hovered row. The canvas is transparent, so the model floats over
+   whatever the box overhangs. */
+.work__object {
   position: absolute;
-  top: 50%;
+  top: 0;
   right: 18%;
   z-index: 3;
   pointer-events: none;
-  width: clamp(84px, 10vw, 140px);
-  height: clamp(84px, 10vw, 140px);
-  border: 1px solid rgba(242, 242, 239, 0.24);
-  /* Opaque bands only — the box overhangs the row, so a translucent fill would
-     let the panel text below show through it. */
-  background: repeating-linear-gradient(135deg, #1f1f1f 0 7px, #0a0a0a 7px 14px);
+  width: clamp(168px, 20vw, 280px);
+  height: clamp(168px, 20vw, 280px);
   opacity: 0;
   transform: translateY(-50%) scale(0.6);
   transition:
     opacity 0.3s ease,
     transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Shown only if a row is hovered before the model finishes downloading. */
+.work__placeholder {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(242, 242, 239, 0.24);
+  /* Opaque bands only — the box overhangs the row, so a translucent fill would
+     let the panel text below show through it. */
+  background: repeating-linear-gradient(135deg, #1f1f1f 0 7px, #0a0a0a 7px 14px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -407,19 +416,13 @@ a:hover {
   color: rgba(242, 242, 239, 0.75);
 }
 
-.row:hover .row__object,
-.row:focus-visible .row__object {
+.work__object.is-visible {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
 
-.row.is-open .row__object {
-  opacity: 0;
-  transform: translateY(-50%) scale(0.6);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .row__object {
+  .work__object {
     transition: none;
   }
 }

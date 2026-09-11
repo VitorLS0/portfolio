@@ -1,11 +1,35 @@
-import { Fragment, useState } from 'react'
+import { Fragment, Suspense, lazy, useEffect, useState } from 'react'
 import type { Lang, Project } from '../content'
 import { copy, projects } from '../content'
 import { settings } from '../site.config'
 
+const RowObject = lazy(() => import('./RowObject'))
+
+const modelOf = (project: Project) => project.model ?? settings.defaultModel
+const models = [...new Set(projects.map(modelOf))]
+
+type Active = { id: number; url: string; top: number; live: boolean }
+
 export function Work({ lang }: { lang: Lang }) {
   const t = copy[lang]
   const [open, setOpen] = useState<Record<number, boolean>>({})
+  // Hovered or focused row. One shared canvas moves to its centre rather than
+  // each row mounting its own, so the model never reloads or re-measures.
+  // `live` goes false on leave; the object fades out where it is.
+  const [active, setActive] = useState<Active | null>(null)
+  // Mount the canvas once the page is idle, so even the first hover is instant.
+  const [warm, setWarm] = useState(false)
+
+  useEffect(() => {
+    // Touch screens never hover, so they skip the three.js and model download.
+    if (!window.matchMedia('(hover: hover)').matches) return
+    if (!('requestIdleCallback' in window)) {
+      const timer = setTimeout(() => setWarm(true), 1000)
+      return () => clearTimeout(timer)
+    }
+    const handle = requestIdleCallback(() => setWarm(true), { timeout: 3000 })
+    return () => cancelIdleCallback(handle)
+  }, [])
 
   const toggle = (id: number) =>
     setOpen((current) =>
@@ -15,6 +39,18 @@ export function Work({ lang }: { lang: Lang }) {
           : { [id]: true }
         : { ...current, [id]: !current[id] },
     )
+
+  const activate = (project: Project, row: HTMLElement) =>
+    setActive({
+      id: project.id,
+      url: modelOf(project),
+      top: row.offsetTop + row.offsetHeight / 2,
+      live: true,
+    })
+  const deactivate = (id: number) =>
+    setActive((current) => (current?.id === id ? { ...current, live: false } : current))
+
+  const visible = !!active?.live && !open[active.id]
 
   return (
     <section className="work">
@@ -30,7 +66,18 @@ export function Work({ lang }: { lang: Lang }) {
               className={`row${open[project.id] ? ' is-open' : ''}`}
               aria-expanded={!!open[project.id]}
               aria-controls={`panel-${project.id}`}
-              onClick={() => toggle(project.id)}
+              onClick={(event) => {
+                toggle(project.id)
+                // Rows above may have collapsed since hover, moving this one.
+                activate(project, event.currentTarget)
+              }}
+              onPointerEnter={(event) => {
+                // Touch has no hover, and a tap opens the row, which hides the object.
+                if (event.pointerType !== 'touch') activate(project, event.currentTarget)
+              }}
+              onPointerLeave={() => deactivate(project.id)}
+              onFocus={(event) => activate(project, event.currentTarget)}
+              onBlur={() => deactivate(project.id)}
             >
               {settings.showNumbers && (
                 <span className="row__index">{String(index + 1).padStart(2, '0')}</span>
@@ -39,13 +86,21 @@ export function Work({ lang }: { lang: Lang }) {
               <span className="row__meta">
                 {open[project.id] ? '—' : '+'} {project.year}
               </span>
-              <span className="row__object" aria-hidden="true">
-                3D
-              </span>
             </button>
             {open[project.id] && <Panel project={project} lang={lang} />}
           </Fragment>
         ))}
+        {(warm || active) && (
+          <div
+            className={`work__object${visible ? ' is-visible' : ''}`}
+            style={active ? { top: active.top } : undefined}
+            aria-hidden="true"
+          >
+            <Suspense fallback={<span className="work__placeholder">3D</span>}>
+              <RowObject url={active?.url ?? models[0]} preload={models} live={visible} />
+            </Suspense>
+          </div>
+        )}
       </div>
     </section>
   )
