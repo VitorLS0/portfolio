@@ -209,15 +209,13 @@ export const copy: Record<Lang, Copy> = {
     skillsLabel: "Skills",
     skills: [
       {
-        label: "Languages",
-        value: "TypeScript, JavaScript, Python, C, HTML, CSS",
-      },
-      {
         label: "Frontend",
-        value: "React, Next.js, Angular, Vue, Tailwind CSS",
+        value:
+          "React, Next.js, Angular, Tailwind CSS, TypeScript, JavaScript, HTML, CSS",
       },
-      { label: "Backend & data", value: "Node.js, Supabase, MongoDB, PouchDB" },
-      { label: "Tools", value: "Git, Linux, Claude Code, OpenCode" },
+      { label: "Backend & Data", value: "Node.js, Python, Supabase, MongoDB" },
+      { label: "Tools & Other", value: "Git, Linux, Claude Code, OpenCode, C" },
+      { label: "Languages", value: "Portuguese (native), English (fluent)" },
     ],
     aboutLabel: "About",
     about: [
@@ -253,18 +251,19 @@ export const copy: Record<Lang, Copy> = {
     skillsLabel: "Competências",
     skills: [
       {
-        label: "Linguagens",
-        value: "TypeScript, JavaScript, Python, C, HTML, CSS",
-      },
-      {
         label: "Front-end",
-        value: "React, Next.js, Angular, Vue, Tailwind CSS",
+        value:
+          "React, Next.js, Angular, Tailwind CSS, TypeScript, JavaScript, HTML, CSS",
       },
       {
         label: "Back-end & dados",
-        value: "Node.js, Supabase, MongoDB, PouchDB",
+        value: "Node.js, Python, Supabase, MongoDB",
       },
-      { label: "Ferramentas", value: "Git, Linux, Claude Code, OpenCode" },
+      {
+        label: "Ferramentas & outros",
+        value: "Git, Linux, Claude Code, OpenCode, C",
+      },
+      { label: "Idiomas", value: "Português (nativo), Inglês (fluente)" },
     ],
     aboutLabel: "Sobre",
     about: [
