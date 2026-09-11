@@ -5,9 +5,9 @@ export const identity = {
   name: "Vítor Stahlberg",
   // Used by the header wordmark: initials collapse/expand from this.
   fullName: "Vítor Lagares Stahlberg",
-  email: "your.email@example.com",
-  github: "https://github.com",
-  linkedin: "https://linkedin.com",
+  email: "vitorlberg@gmail.com",
+  github: "https://github.com/VitorLS0",
+  linkedin: "https://www.linkedin.com/in/vitor-stahlberg/",
   resume: "/resume-en.pdf",
 };
 // ────────────────────────────────────────────────────────────────────────────
