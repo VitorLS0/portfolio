@@ -11,7 +11,11 @@ export type Project = {
   tags: Localized<string[]>;
   /** .glb shown on hover; falls back to settings.defaultModel. */
   model?: string;
+  /** Shown as a gallery: the first starts large, thumbnails switch between them. */
+  screenshots?: Screenshot[];
 };
+
+export type Screenshot = { src: string; alt: Localized<string> };
 
 export const projects: Project[] = [
   {
@@ -84,6 +88,7 @@ export const projects: Project[] = [
       en: ["React", "TypeScript", "MongoDB", "PouchDB"],
       pt: ["React", "TypeScript", "MongoDB", "PouchDB"],
     },
+    model: "/dokmint-mark.glb",
   },
   {
     id: 5,
@@ -115,6 +120,29 @@ export const projects: Project[] = [
       pt: ["Next.js", "Node.js", "Supabase"],
     },
     model: "/relic.glb",
+    screenshots: [
+      {
+        src: "/projects/relicshare1.JPG",
+        alt: {
+          en: "Recent sessions page listing players hosting and looking for relics",
+          pt: "Página de sessões recentes com jogadores oferecendo e procurando relíquias",
+        },
+      },
+      {
+        src: "/projects/relicshare2.JPG",
+        alt: {
+          en: "Relic catalog grid with search and tier filters",
+          pt: "Catálogo de relíquias em grade com busca e filtros por tier",
+        },
+      },
+      {
+        src: "/projects/relicshare3.JPG",
+        alt: {
+          en: "Relic detail page showing its rewards and open sessions",
+          pt: "Página de detalhes da relíquia com recompensas e sessões abertas",
+        },
+      },
+    ],
   },
   {
     id: 7,

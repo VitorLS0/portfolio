@@ -82,6 +82,7 @@ a:hover {
   gap: 10px;
   font-family: var(--mono);
   font-size: 11px;
+  font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -125,7 +126,6 @@ a:hover {
 .header__dot {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
   background: var(--accent);
   display: inline-block;
 }
@@ -236,11 +236,24 @@ a:hover {
 .hero__title {
   margin: 0;
   font-size: clamp(44px, 11vw, 180px);
+  /* Width alone would let a wide but short window grow the name until the
+     hero overflows the space under the header and band. Cap it by height
+     too: 440px is roughly the rest of the hero's content, and the name's
+     two lines are 1.72em tall. */
+  font-size: clamp(
+    44px,
+    min(11vw, (100svh - var(--header-h) - var(--band-h) - 440px) / 1.72),
+    180px
+  );
   font-weight: 900;
   line-height: 0.86;
   letter-spacing: -0.045em;
   text-transform: uppercase;
   text-wrap: balance;
+}
+
+.hero__line {
+  display: block;
 }
 
 .hero__role {
@@ -441,6 +454,15 @@ a:hover {
   align-items: start;
 }
 
+/* Projects with screenshots run the reel full width, with the copy beneath. */
+.panel__grid--media {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.panel__grid--media .panel__copy {
+  grid-column: auto;
+}
+
 .shots {
   display: flex;
   flex-direction: column;
@@ -480,6 +502,137 @@ a:hover {
   text-transform: uppercase;
   font-size: 9px;
   color: rgba(242, 242, 239, 0.55);
+}
+
+/* ── Screenshot reel ────────────────────────────────────────────────────── */
+
+.reel {
+  margin: 0;
+  min-width: 0;
+}
+
+/* With 3 slices at 1 : 1 : 6, 14:5 leaves the active one near the
+   screenshots' own ~2:1, so it shows almost uncropped. */
+.reel__slices {
+  display: flex;
+  gap: 6px;
+  aspect-ratio: 14 / 5;
+}
+
+/* Same easing as the header wordmark reveal. */
+.reel__slice {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  cursor: pointer;
+  background: #141414;
+  border: 1px solid var(--rule-strong);
+  transition:
+    flex-grow 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.3s ease;
+}
+
+.reel__slice.is-active {
+  flex-grow: 6;
+  cursor: default;
+  border-color: rgba(242, 242, 239, 0.3);
+}
+
+.reel__slice:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Absolute, so the image never sizes its slice. Narrow slices show the
+   left edge, and widening reveals more instead of rescaling. */
+.reel__slice img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left top;
+  filter: grayscale(1) brightness(0.4);
+  transition: filter 0.4s ease;
+}
+
+.reel__slice:hover img {
+  filter: grayscale(1) brightness(0.6);
+}
+
+.reel__slice.is-active img {
+  filter: none;
+}
+
+.reel__index {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  background: rgba(10, 10, 10, 0.75);
+  color: rgba(242, 242, 239, 0.75);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+.reel__slice.is-active .reel__index {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.reel__caption {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(242, 242, 239, 0.6);
+}
+
+.reel__count {
+  flex: none;
+  color: var(--accent);
+}
+
+/* Keyed on the selection, so each new caption replays the entrance. */
+.reel__alt {
+  min-width: 0;
+  animation: panelIn 0.35s ease both;
+}
+
+/* Narrow screens stack the slices: the active one gets the full width. */
+@media (max-width: 760px) {
+  .reel__slices {
+    flex-direction: column;
+    aspect-ratio: 4 / 3;
+  }
+
+  .reel__slice.is-active {
+    flex-grow: 4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel__slice,
+  .reel__slice img,
+  .reel__index {
+    transition: none;
+  }
+
+  .reel__alt {
+    animation: none;
+  }
 }
 
 .shots__caption {

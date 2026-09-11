@@ -14,7 +14,9 @@ export const identity = {
 
 export const settings = {
   defaultLang: "en" as Lang,
-  showNumbers: true,
+  showNumbers: false,
+  // "01 / 03" counter in the screenshot reel's caption.
+  showReelCount: false,
   singleOpen: true,
   timeZone: "America/Sao_Paulo",
   // Hover model for projects that don't set their own `model`.
