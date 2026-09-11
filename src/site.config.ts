@@ -1,4 +1,4 @@
-import type { Lang } from "./content";
+import type { Lang, ModelStyle } from "./content";
 
 // ────────────────────────────────────────────────────────────────────────────
 export const identity = {
@@ -21,4 +21,8 @@ export const settings = {
   timeZone: "America/Sao_Paulo",
   // Hover model for projects that don't set their own `model`.
   defaultModel: "/the_thinker_by_auguste_rodin.glb",
+  // "original" keeps each model's own materials; "outline" draws it flat
+  // black, inked in `outlineColor`. A project can override it.
+  modelStyle: "outline" as ModelStyle,
+  outlineColor: "#f2f2ef",
 };

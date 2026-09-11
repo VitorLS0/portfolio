@@ -1,14 +1,22 @@
 import { Fragment, Suspense, lazy, useEffect, useState } from "react";
-import type { Lang, Project, Screenshot } from "../content";
+import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
 
 const RowObject = lazy(() => import("./RowObject"));
 
 const modelOf = (project: Project) => project.model ?? settings.defaultModel;
+const styleOf = (project: Project) =>
+  project.modelStyle ?? settings.modelStyle;
 const models = [...new Set(projects.map(modelOf))];
 
-type Active = { id: number; url: string; top: number; live: boolean };
+type Active = {
+  id: number;
+  url: string;
+  style: ModelStyle;
+  top: number;
+  live: boolean;
+};
 
 export function Work({ lang }: { lang: Lang }) {
   const t = copy[lang];
@@ -44,6 +52,7 @@ export function Work({ lang }: { lang: Lang }) {
     setActive({
       id: project.id,
       url: modelOf(project),
+      style: styleOf(project),
       top: row.offsetTop + row.offsetHeight / 2,
       live: true,
     });
@@ -104,6 +113,7 @@ export function Work({ lang }: { lang: Lang }) {
             <Suspense fallback={<span className="work__placeholder">3D</span>}>
               <RowObject
                 url={active?.url ?? models[0]}
+                modelStyle={active?.style ?? settings.modelStyle}
                 preload={models}
                 live={visible}
               />

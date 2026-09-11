@@ -2,6 +2,8 @@ export type Lang = "en" | "pt";
 
 type Localized<T> = Record<Lang, T>;
 
+export type ModelStyle = "original" | "outline";
+
 export type Project = {
   id: number;
   year: string;
@@ -11,6 +13,8 @@ export type Project = {
   tags: Localized<string[]>;
   /** .glb shown on hover; falls back to settings.defaultModel. */
   model?: string;
+  /** Overrides settings.modelStyle, e.g. "original" for textured models. */
+  modelStyle?: ModelStyle;
   /** Shown as a gallery: the first starts large, thumbnails switch between them. */
   screenshots?: Screenshot[];
 };
@@ -54,6 +58,7 @@ export const projects: Project[] = [
       pt: ["Java", "Maven", "Supply chain"],
     },
     model: "/wms-brooch-2025.glb",
+    modelStyle: "original",
   },
   {
     id: 3,
@@ -75,6 +80,7 @@ export const projects: Project[] = [
       pt: ["Agendamento", "Inventário", "Cliente real"],
     },
     model: "/wms-brooch-2024.glb",
+    modelStyle: "original",
   },
   {
     id: 4,
@@ -119,7 +125,7 @@ export const projects: Project[] = [
       en: ["Next.js", "Node.js", "Supabase"],
       pt: ["Next.js", "Node.js", "Supabase"],
     },
-    model: "/relic.glb",
+    model: "/relic-lite.glb",
     screenshots: [
       {
         src: "/projects/relicshare1.JPG",

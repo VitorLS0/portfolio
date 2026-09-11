@@ -1,8 +1,27 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Environment, Lightformer, Preload, useGLTF } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Box3, MathUtils, NeutralToneMapping, Vector3 } from 'three'
-import type { Group } from 'three'
+import {
+  BackSide,
+  Box3,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  EdgesGeometry,
+  LineBasicMaterial,
+  LineSegments,
+  MathUtils,
+  Mesh,
+  MeshBasicMaterial,
+  NeutralToneMapping,
+  ShaderMaterial,
+  Vector2,
+  Vector3,
+} from 'three'
+import type { Group, Object3D } from 'three'
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import type { ModelStyle } from '../content'
+import { settings } from '../site.config'
 
 // Last known cursor position in viewport pixels, shared by every model.
 const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
@@ -22,8 +41,115 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 const MAX_TURN = { x: 0.6, y: 0.9 }
 const REST = { x: 0.2, y: -0.35 }
 
-function Model({ url, onReady }: { url: string; onReady: () => void }) {
+// ── Outline style ──────────────────────────────────────────────────────────
+// A cartoon look: flat black, an even ink line around the silhouette, and
+// thinner lines along only the sharpest creases. No shading at all.
+
+// Silhouette line width in CSS pixels, the same at any model size.
+const OUTLINE_WIDTH = 2.5
+// Faces meeting at more than this many degrees get a crease line. Lower it
+// for more interior detail, raise it for a flatter, cleaner look.
+const EDGE_ANGLE = 50
+
+const outlineColor = new Color(settings.outlineColor)
+
+// Hides whatever is behind it. Polygon offset nudges it back so the crease
+// lines drawn on its surface always win the depth test.
+const fillMaterial = new MeshBasicMaterial({
+  color: 0x000000,
+  polygonOffset: true,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1,
+})
+
+const lineMaterial = new LineBasicMaterial({ color: outlineColor, toneMapped: false })
+
+// "Inverted hull": the model's back faces, pushed outward along their
+// normals in screen space, peek out around the black fill as an ink line.
+// Model.useFrame keeps uViewport in sync with the canvas size.
+const hullMaterial = new ShaderMaterial({
+  side: BackSide,
+  toneMapped: false,
+  uniforms: {
+    uColor: { value: outlineColor },
+    uWidth: { value: OUTLINE_WIDTH },
+    uViewport: { value: new Vector2(1, 1) },
+  },
+  vertexShader: /* glsl */ `
+    uniform float uWidth;
+    uniform vec2 uViewport;
+    void main() {
+      vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      vec2 dir = (projectionMatrix * vec4(normalMatrix * normal, 0.0)).xy;
+      float len = length(dir);
+      // Pixels → clip space: 2 / viewport per pixel, scaled by w to undo
+      // the perspective divide.
+      if (len > 0.0) clip.xy += dir / len * uWidth * 2.0 / uViewport * clip.w;
+      gl_Position = clip;
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform vec3 uColor;
+    void main() {
+      gl_FragColor = vec4(uColor, 1.0);
+      #include <colorspace_fragment>
+    }
+  `,
+})
+
+// The hull needs one averaged normal per corner, or it splits open along
+// hard edges. Copies the positions as plain floats (the source may be
+// quantized or interleaved), welds shared corners and recomputes normals.
+function hullGeometry(source: BufferGeometry) {
+  const position = source.getAttribute('position')
+  const floats = new Float32Array(position.count * 3)
+  for (let i = 0; i < position.count; i++) {
+    floats[i * 3] = position.getX(i)
+    floats[i * 3 + 1] = position.getY(i)
+    floats[i * 3 + 2] = position.getZ(i)
+  }
+  const geometry = new BufferGeometry()
+  geometry.setAttribute('position', new BufferAttribute(floats, 3))
+  if (source.index) geometry.setIndex(source.index)
+
+  // Weld tolerance relative to the mesh's size, since glTF units vary.
+  geometry.computeBoundingBox()
+  const extent = geometry.boundingBox!.getSize(new Vector3()).length()
+  const welded = mergeVertices(geometry, extent * 1e-5)
+  welded.computeVertexNormals()
+  return welded
+}
+
+const outlined = new WeakMap<Object3D, Object3D>()
+
+// A styled copy of a cached glTF scene, built once per model so switching
+// rows never rebuilds it. The fill shares the original's geometry.
+function outline(scene: Object3D) {
+  const cached = outlined.get(scene)
+  if (cached) return cached
+
+  const copy = scene.clone()
+  const meshes: Mesh[] = []
+  copy.traverse((child) => {
+    if (child instanceof Mesh) meshes.push(child)
+  })
+  for (const mesh of meshes) {
+    mesh.material = fillMaterial
+    mesh.add(new Mesh(hullGeometry(mesh.geometry), hullMaterial))
+    mesh.add(new LineSegments(new EdgesGeometry(mesh.geometry, EDGE_ANGLE), lineMaterial))
+  }
+  outlined.set(scene, copy)
+  return copy
+}
+
+type ModelProps = { url: string; style: ModelStyle; onReady: () => void }
+
+function Model({ url, style, onReady }: ModelProps) {
   const { scene } = useGLTF(url)
+  const object = useMemo(
+    () => (style === 'outline' ? outline(scene) : scene),
+    [scene, style],
+  )
   const turn = useRef<Group>(null)
 
   // Models arrive in arbitrary units and origins: centre the bounds and scale
@@ -39,7 +165,8 @@ function Model({ url, onReady }: { url: string; onReady: () => void }) {
 
   useEffect(onReady, [onReady])
 
-  useFrame(({ gl }, delta) => {
+  useFrame(({ gl, size }, delta) => {
+    hullMaterial.uniforms.uViewport.value.set(size.width, size.height)
     const group = turn.current
     if (!group) return
 
@@ -64,7 +191,7 @@ function Model({ url, onReady }: { url: string; onReady: () => void }) {
     <group ref={turn}>
       <group scale={fit.scale}>
         <group position={fit.offset}>
-          <primitive object={scene} dispose={null} />
+          <primitive object={object} dispose={null} />
         </group>
       </group>
     </group>
@@ -73,12 +200,13 @@ function Model({ url, onReady }: { url: string; onReady: () => void }) {
 
 type Props = {
   url: string
+  modelStyle: ModelStyle
   /** Every model the page can show, fetched up front so switching never waits. */
   preload: string[]
   live: boolean
 }
 
-export default function RowObject({ url, preload, live }: Props) {
+export default function RowObject({ url, modelStyle, preload, live }: Props) {
   const [ready, setReady] = useState(false)
   const markReady = useMemo(() => () => setReady(true), [])
 
@@ -104,6 +232,7 @@ export default function RowObject({ url, preload, live }: Props) {
           gl.toneMapping = NeutralToneMapping
         }}
       >
+        {/* Only "original" models use the lighting; the outline style is unlit. */}
         <ambientLight intensity={0.5} />
         <directionalLight position={[2, 3, 4]} intensity={1.5} />
         {/* Built from lightformers, so no HDR file is fetched. */}
@@ -112,7 +241,7 @@ export default function RowObject({ url, preload, live }: Props) {
           <Lightformer intensity={1} position={[-4, 0, 2]} scale={[1, 4, 1]} />
         </Environment>
         <Suspense fallback={null}>
-          <Model url={url} onReady={markReady} />
+          <Model url={url} style={modelStyle} onReady={markReady} />
           {/* Compile shaders and upload textures now, not on first hover. */}
           <Preload all />
         </Suspense>
