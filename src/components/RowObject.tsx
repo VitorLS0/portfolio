@@ -13,6 +13,7 @@ import {
   MathUtils,
   Mesh,
   MeshBasicMaterial,
+  MeshStandardMaterial,
   NeutralToneMapping,
   ShaderMaterial,
   Vector2,
@@ -120,12 +121,39 @@ function hullGeometry(source: BufferGeometry) {
   return welded
 }
 
-const outlined = new WeakMap<Object3D, Object3D>()
+// ── Plain style ────────────────────────────────────────────────────────────
+// Just the shape: one matte material, no textures or vertex colours, lit by
+// the scene's lights so the form still reads.
 
-// A styled copy of a cached glTF scene, built once per model so switching
-// rows never rebuilds it. The fill shares the original's geometry.
-function outline(scene: Object3D) {
-  const cached = outlined.get(scene)
+const PLAIN_COLOR = 0xd4d4d0
+
+const plainMaterial = new MeshStandardMaterial({
+  color: PLAIN_COLOR,
+  roughness: 0.85,
+  metalness: 0,
+})
+// For meshes stored without normals (like the optimized relic). Flat shading
+// derives each face's normal on the GPU, so it needs none.
+const plainFlatMaterial = new MeshStandardMaterial({
+  color: PLAIN_COLOR,
+  roughness: 0.85,
+  metalness: 0,
+  flatShading: true,
+})
+
+// ── Restyling ──────────────────────────────────────────────────────────────
+
+type Restyle = Exclude<ModelStyle, 'original'>
+
+const styled: Record<Restyle, WeakMap<Object3D, Object3D>> = {
+  outline: new WeakMap(),
+  plain: new WeakMap(),
+}
+
+// A styled copy of a cached glTF scene, built once per model and style so
+// switching rows never rebuilds it. Copies share the original's geometry.
+function restyle(scene: Object3D, style: Restyle) {
+  const cached = styled[style].get(scene)
   if (cached) return cached
 
   const copy = scene.clone()
@@ -134,11 +162,15 @@ function outline(scene: Object3D) {
     if (child instanceof Mesh) meshes.push(child)
   })
   for (const mesh of meshes) {
+    if (style === 'plain') {
+      mesh.material = mesh.geometry.attributes.normal ? plainMaterial : plainFlatMaterial
+      continue
+    }
     mesh.material = fillMaterial
     mesh.add(new Mesh(hullGeometry(mesh.geometry), hullMaterial))
     mesh.add(new LineSegments(new EdgesGeometry(mesh.geometry, EDGE_ANGLE), lineMaterial))
   }
-  outlined.set(scene, copy)
+  styled[style].set(scene, copy)
   return copy
 }
 
@@ -147,7 +179,7 @@ type ModelProps = { url: string; style: ModelStyle; onReady: () => void }
 function Model({ url, style, onReady }: ModelProps) {
   const { scene } = useGLTF(url)
   const object = useMemo(
-    () => (style === 'outline' ? outline(scene) : scene),
+    () => (style === 'original' ? scene : restyle(scene, style)),
     [scene, style],
   )
   const turn = useRef<Group>(null)

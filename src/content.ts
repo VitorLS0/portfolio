@@ -2,7 +2,7 @@ export type Lang = "en" | "pt";
 
 type Localized<T> = Record<Lang, T>;
 
-export type ModelStyle = "original" | "outline";
+export type ModelStyle = "original" | "outline" | "plain";
 
 export type Project = {
   id: number;
@@ -22,22 +22,22 @@ export type Project = {
 export type Screenshot = { src: string; alt: Localized<string> };
 
 export const projects: Project[] = [
-  {
-    id: 1,
-    year: "2026",
-    title: {
-      en: "Web Accessibility in Government",
-      pt: "Acessibilidade Web no Governo",
-    },
-    description: {
-      en: "Undergraduate thesis. Automated WCAG and e-MAG audits combined with screen-reader usability testing across five federal service flows. The two most standards-compliant portals had 0% task completion for blind users — automated compliance does not guarantee real accessibility.",
-      pt: "Trabalho de conclusão de curso. Auditorias automatizadas WCAG e e-MAG combinadas com testes de usabilidade com leitores de tela em cinco fluxos de serviços federais. Os dois portais mais aderentes às normas tiveram 0% de conclusão de tarefas por usuários cegos — conformidade automatizada não garante acessibilidade real.",
-    },
-    tags: {
-      en: ["WCAG", "e-MAG", "Screen readers"],
-      pt: ["WCAG", "e-MAG", "Leitores de tela"],
-    },
-  },
+  // {
+  //   id: 1,
+  //   year: "2026",
+  //   title: {
+  //     en: "Web Accessibility in Government",
+  //     pt: "Acessibilidade Web no Governo",
+  //   },
+  //   description: {
+  //     en: "Undergraduate thesis. Automated WCAG and e-MAG audits combined with screen-reader usability testing across five federal service flows. The two most standards-compliant portals had 0% task completion for blind users — automated compliance does not guarantee real accessibility.",
+  //     pt: "Trabalho de conclusão de curso. Auditorias automatizadas WCAG e e-MAG combinadas com testes de usabilidade com leitores de tela em cinco fluxos de serviços federais. Os dois portais mais aderentes às normas tiveram 0% de conclusão de tarefas por usuários cegos — conformidade automatizada não garante acessibilidade real.",
+  //   },
+  //   tags: {
+  //     en: ["WCAG", "e-MAG", "Screen readers"],
+  //     pt: ["WCAG", "e-MAG", "Leitores de tela"],
+  //   },
+  // },
   {
     id: 2,
     year: "2025",

@@ -22,7 +22,8 @@ export const settings = {
   // Hover model for projects that don't set their own `model`.
   defaultModel: "/the_thinker_by_auguste_rodin.glb",
   // "original" keeps each model's own materials; "outline" draws it flat
-  // black, inked in `outlineColor`. A project can override it.
-  modelStyle: "outline" as ModelStyle,
+  // black, inked in `outlineColor`; "plain" is the bare shape in matte grey,
+  // with no textures or colours. A project can override it.
+  modelStyle: "plain" as ModelStyle,
   outlineColor: "#f2f2ef",
 };
