@@ -2,8 +2,7 @@ import { Fragment, Suspense, lazy, useCallback, useEffect, useRef, useState } fr
 import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
-import { startTilt, tiltNeedsPermission } from "../tilt";
-import { TiltDebug } from "./TiltDebug";
+import { dragEnd, dragFrom, dragTo } from "../swipe";
 
 const RowObject = lazy(() => import("./RowObject"));
 
@@ -71,23 +70,6 @@ export function Work({ lang }: { lang: Lang }) {
     return () => observer.disconnect();
   }, [roulette, warm]);
 
-  // iOS gates the motion sensor behind a prompt only a tap may open; every other
-  // phone just starts reporting. Only the first case needs a button.
-  const [ask, setAsk] = useState(false);
-
-  useEffect(() => {
-    if (!roulette || !warm) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (tiltNeedsPermission()) setAsk(true);
-    else startTilt();
-  }, [roulette, warm]);
-
-  // Asked once: granted or not, the button goes rather than nagging.
-  const allowTilt = async () => {
-    await startTilt();
-    setAsk(false);
-  };
-
   const toggle = (id: number) =>
     setOpen((current) =>
       settings.singleOpen
@@ -149,11 +131,29 @@ export function Work({ lang }: { lang: Lang }) {
     };
   }, [roulette, activate, open]);
 
+  // Dragging sideways across the list turns the models (see swipe.ts). The
+  // list's touch-action keeps vertical panning as scrolling, so only sideways
+  // movement reaches here.
+  const dragged = useRef(false);
+  const drag = {
+    onPointerDown: (event: React.PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      dragged.current = false;
+      dragFrom(event.clientX);
+    },
+    onPointerMove: (event: React.PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      dragged.current = true;
+      dragTo(event.clientX);
+    },
+    onPointerUp: dragEnd,
+    onPointerCancel: dragEnd,
+  };
+
   const visible = !!active?.live && !open[active.id];
 
   return (
     <section className="work">
-      {location.search.includes("tilt-debug") && <TiltDebug />}
       {roulette && (
         <div
           className={`marker${active?.live ? " is-visible" : ""}`}
@@ -165,14 +165,9 @@ export function Work({ lang }: { lang: Lang }) {
       )}
       <div className="work__head">
         <span>{t.workLabel}</span>
-        {ask && (
-          <button type="button" className="tilt" onClick={allowTilt}>
-            {t.tiltPrompt}
-          </button>
-        )}
         <span>{String(projects.length).padStart(2, "0")}</span>
       </div>
-      <div className="work__list" ref={list}>
+      <div className="work__list" ref={list} {...drag}>
         {projects.map((project, index) => (
           <Fragment key={project.id}>
             <button
@@ -185,6 +180,8 @@ export function Work({ lang }: { lang: Lang }) {
               aria-expanded={!!open[project.id]}
               aria-controls={`panel-${project.id}`}
               onClick={(event) => {
+                // A sideways drag that ended on this row is not a tap on it.
+                if (dragged.current) return;
                 toggle(project.id);
                 // Rows above may have collapsed since hover, moving this one.
                 if (!roulette) activate(project, event.currentTarget);
