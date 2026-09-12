@@ -15,6 +15,11 @@ export type Project = {
   model?: string;
   /** Overrides settings.modelStyle, e.g. "original" for textured models. */
   modelStyle?: ModelStyle;
+  /**
+   * Trims the auto-fit size, for marks that read as too heavy beside the rest.
+   * 1 is the shared fit (longest side filling the frame).
+   */
+  modelScale?: number;
   /** Shown as a gallery: the first starts large, thumbnails switch between them. */
   screenshots?: Screenshot[];
 };
@@ -59,6 +64,7 @@ export const projects: Project[] = [
     },
     model: "/wms-brooch-2025.glb",
     modelStyle: "original",
+    modelScale: 0.8,
   },
   {
     id: 3,
@@ -81,6 +87,7 @@ export const projects: Project[] = [
     },
     model: "/wms-brooch-2024.glb",
     modelStyle: "original",
+    modelScale: 0.8,
   },
   {
     id: 4,
@@ -95,6 +102,7 @@ export const projects: Project[] = [
       pt: ["React", "TypeScript", "MongoDB", "PouchDB"],
     },
     model: "/dokmint-mark.glb",
+    modelScale: 0.75,
   },
   {
     id: 5,
@@ -235,7 +243,7 @@ export const copy: Record<Lang, Copy> = {
     location: "Belo Horizonte, Brasil  /  Disponível para trabalho",
     wip: "Em construção",
     role: "Desenvolvedor full-stack",
-    bio: "Formado em Engenharia de Software (PUC Minas, 2026). Dois anos construindo interfaces em React e TypeScript para sistemas de saúde, agora avançando para back-end com Node.js.",
+    bio: "Formado em Engenharia de Software (PUC Minas, 2026). Dois anos construindo interfaces em React e TypeScript para sistemas de saúde, avançando para back-end com Node.js.",
     facts: [
       { label: "Hoje", value: "Trainee — Suporte Tecnologias" },
       { label: "Desde", value: "Set 2024" },

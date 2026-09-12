@@ -185,9 +185,14 @@ function restyle(scene: Object3D, style: Restyle) {
   return copy;
 }
 
-type ModelProps = { url: string; style: ModelStyle; onReady: () => void };
+type ModelProps = {
+  url: string;
+  style: ModelStyle;
+  scale: number;
+  onReady: () => void;
+};
 
-function Model({ url, style, onReady }: ModelProps) {
+function Model({ url, style, scale, onReady }: ModelProps) {
   const { scene } = useGLTF(url);
   const object = useMemo(
     () => (style === "original" ? scene : restyle(scene, style)),
@@ -196,15 +201,16 @@ function Model({ url, style, onReady }: ModelProps) {
   const turn = useRef<Group>(null);
 
   // Models arrive in arbitrary units and origins: centre the bounds and scale
-  // the longest side to 2 world units so any file fits the same camera.
+  // the longest side to 2 world units so any file fits the same camera. A
+  // project can trim that fit with modelScale.
   const fit = useMemo(() => {
     const box = new Box3().setFromObject(scene);
     const size = box.getSize(new Vector3());
     return {
-      scale: 2 / Math.max(size.x, size.y, size.z),
+      scale: (2 * scale) / Math.max(size.x, size.y, size.z),
       offset: box.getCenter(new Vector3()).negate(),
     };
-  }, [scene]);
+  }, [scene, scale]);
 
   useEffect(onReady, [onReady]);
 
@@ -252,12 +258,20 @@ function Model({ url, style, onReady }: ModelProps) {
 type Props = {
   url: string;
   modelStyle: ModelStyle;
+  /** Per-project trim on the shared auto-fit; 1 is the fit itself. */
+  modelScale: number;
   /** Every model the page can show, fetched up front so switching never waits. */
   preload: string[];
   live: boolean;
 };
 
-export default function RowObject({ url, modelStyle, preload, live }: Props) {
+export default function RowObject({
+  url,
+  modelStyle,
+  modelScale,
+  preload,
+  live,
+}: Props) {
   const [ready, setReady] = useState(false);
   const markReady = useMemo(() => () => setReady(true), []);
 
@@ -292,7 +306,12 @@ export default function RowObject({ url, modelStyle, preload, live }: Props) {
           <Lightformer intensity={1} position={[-4, 0, 2]} scale={[1, 4, 1]} />
         </Environment>
         <Suspense fallback={null}>
-          <Model url={url} style={modelStyle} onReady={markReady} />
+          <Model
+            url={url}
+            style={modelStyle}
+            scale={modelScale}
+            onReady={markReady}
+          />
           {/* Compile shaders and upload textures now, not on first hover. */}
           <Preload all />
         </Suspense>

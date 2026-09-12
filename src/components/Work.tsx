@@ -9,6 +9,7 @@ const RowObject = lazy(() => import("./RowObject"));
 const modelOf = (project: Project) => project.model ?? settings.defaultModel;
 const styleOf = (project: Project) =>
   project.modelStyle ?? settings.modelStyle;
+const scaleOf = (project: Project) => project.modelScale ?? 1;
 const models = [...new Set(projects.map(modelOf))];
 
 // Height of the roulette marker, as a fraction of the viewport. The arrow is
@@ -20,6 +21,7 @@ type Active = {
   id: number;
   url: string;
   style: ModelStyle;
+  scale: number;
   top: number;
   live: boolean;
 };
@@ -90,6 +92,7 @@ export function Work({ lang }: { lang: Lang }) {
             id: project.id,
             url: modelOf(project),
             style: styleOf(project),
+            scale: scaleOf(project),
             top,
             live: true,
           },
@@ -218,6 +221,7 @@ export function Work({ lang }: { lang: Lang }) {
               <RowObject
                 url={active?.url ?? models[0]}
                 modelStyle={active?.style ?? settings.modelStyle}
+                modelScale={active?.scale ?? 1}
                 preload={models}
                 live={visible}
               />
