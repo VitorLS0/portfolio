@@ -3,6 +3,7 @@ import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
 import { startTilt, tiltNeedsPermission } from "../tilt";
+import { TiltDebug } from "./TiltDebug";
 
 const RowObject = lazy(() => import("./RowObject"));
 
@@ -152,6 +153,7 @@ export function Work({ lang }: { lang: Lang }) {
 
   return (
     <section className="work">
+      {location.search.includes("tilt-debug") && <TiltDebug />}
       {roulette && (
         <div
           className={`marker${active?.live ? " is-visible" : ""}`}

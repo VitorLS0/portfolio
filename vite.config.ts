@@ -13,7 +13,7 @@ const escapeHtml = (text: string) => text.replace(/[&"<>]/g, (char) => entities[
 function sharePreview(): Plugin {
   const t = copy[settings.defaultLang]
   const siteUrl = identity.siteUrl.replace(/\/+$/, '')
-  const title = `${identity.name} — ${t.role}`
+  const title = `${identity.name}`
   const image = `${siteUrl}/og-image.png`
 
   const meta: [attr: 'name' | 'property', key: string, content: string][] = [
