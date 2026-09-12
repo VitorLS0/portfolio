@@ -29,13 +29,39 @@ a {
   text-decoration: none;
 }
 
-a:hover {
-  color: var(--accent);
+/* Touch has no hover, but tapping still matches :hover there and leaves it
+   stuck on the element until something else is tapped. Every hover-only
+   effect is therefore behind a pointer query, with :active as its touch
+   counterpart where the feedback matters. */
+@media (hover: hover) {
+  a:hover {
+    color: var(--accent);
+  }
 }
 
 ::selection {
   background: var(--accent);
   color: var(--bg);
+}
+
+/* A tap should run a control, not paint the browser's grey box across it.
+   .row and .reel__slice use `all: unset`, which restores that default. */
+.row,
+.reel__slice,
+.lang button,
+.footer__links a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* These carry labels rather than prose, and `all: unset` makes them
+   selectable again: a long press should not highlight them or raise the
+   text callout. Links keep theirs, so their address stays copyable. */
+.row,
+.reel__slice,
+.lang button {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 @keyframes panelIn {
@@ -184,8 +210,10 @@ a:hover {
   animation: wipScroll 480s linear infinite;
 }
 
-.wip:hover .wip__track {
-  animation-play-state: paused;
+@media (hover: hover) {
+  .wip:hover .wip__track {
+    animation-play-state: paused;
+  }
 }
 
 .wip__group {
@@ -363,9 +391,15 @@ a:hover {
   border-bottom: 1px solid var(--rule-strong);
 }
 
-.row:hover,
-.row:focus-visible {
+.row:focus-visible,
+.row:active {
   color: var(--accent);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    color: var(--accent);
+  }
 }
 
 .row:focus-visible {
@@ -617,8 +651,10 @@ a:hover {
   transition: filter 0.4s ease;
 }
 
-.reel__slice:hover img {
-  filter: grayscale(1) brightness(0.6);
+@media (hover: hover) {
+  .reel__slice:hover img {
+    filter: grayscale(1) brightness(0.6);
+  }
 }
 
 .reel__slice.is-active img {
@@ -831,10 +867,18 @@ a:hover {
   padding: 12px 18px;
 }
 
-.footer__links a:hover {
+.footer__links a:active {
   background: var(--accent);
   color: var(--bg);
   border-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .footer__links a:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
 }
 
 .footer__links a.is-primary {
@@ -843,9 +887,16 @@ a:hover {
   border-color: var(--accent);
 }
 
-.footer__links a.is-primary:hover {
+.footer__links a.is-primary:active {
   background: transparent;
   color: var(--accent);
+}
+
+@media (hover: hover) {
+  .footer__links a.is-primary:hover {
+    background: transparent;
+    color: var(--accent);
+  }
 }
 
 .footer__clock {
