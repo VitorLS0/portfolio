@@ -2,6 +2,7 @@ import { Fragment, Suspense, lazy, useCallback, useEffect, useRef, useState } fr
 import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
+import { startTilt, tiltNeedsPermission } from "../tilt";
 
 const RowObject = lazy(() => import("./RowObject"));
 
@@ -68,6 +69,23 @@ export function Work({ lang }: { lang: Lang }) {
     observer.observe(list.current);
     return () => observer.disconnect();
   }, [roulette, warm]);
+
+  // iOS gates the motion sensor behind a prompt only a tap may open; every other
+  // phone just starts reporting. Only the first case needs a button.
+  const [ask, setAsk] = useState(false);
+
+  useEffect(() => {
+    if (!roulette || !warm) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (tiltNeedsPermission()) setAsk(true);
+    else startTilt();
+  }, [roulette, warm]);
+
+  // Asked once: granted or not, the button goes rather than nagging.
+  const allowTilt = async () => {
+    await startTilt();
+    setAsk(false);
+  };
 
   const toggle = (id: number) =>
     setOpen((current) =>
@@ -145,6 +163,11 @@ export function Work({ lang }: { lang: Lang }) {
       )}
       <div className="work__head">
         <span>{t.workLabel}</span>
+        {ask && (
+          <button type="button" className="tilt" onClick={allowTilt}>
+            {t.tiltPrompt}
+          </button>
+        )}
         <span>{String(projects.length).padStart(2, "0")}</span>
       </div>
       <div className="work__list" ref={list}>

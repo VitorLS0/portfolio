@@ -23,6 +23,7 @@ import type { Group, Object3D } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { ModelStyle } from "../content";
 import { settings } from "../site.config";
+import { tilt } from "../tilt";
 
 // Last known cursor position in viewport pixels, shared by every model.
 const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -214,7 +215,14 @@ function Model({ url, style, onReady }: ModelProps) {
 
     let x = REST.x;
     let y = REST.y;
-    if (!reducedMotion.matches) {
+    if (reducedMotion.matches) {
+      // Hold the rest pose.
+    } else if (tilt.live) {
+      // A phone turns the models itself, so they swing around the rest pose
+      // together instead of each reading the cursor's position.
+      y = REST.y + tilt.y * MAX_TURN.y;
+      x = REST.x + tilt.x * MAX_TURN.x;
+    } else {
       // Direction from the model's on-screen centre to the cursor, as a
       // fraction of half the viewport.
       const rect = gl.domElement.getBoundingClientRect();

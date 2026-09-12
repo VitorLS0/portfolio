@@ -177,6 +177,7 @@ type Copy = {
   bio: string;
   facts: { label: string; value: string; accent?: boolean }[];
   workLabel: string;
+  tiltPrompt: string;
   screenshotLead: string;
   screenshotCaption: string;
   skillsLabel: string;
@@ -204,6 +205,7 @@ export const copy: Record<Lang, Copy> = {
       },
     ],
     workLabel: "Selected work",
+    tiltPrompt: "Tilt to look",
     screenshotLead: "Screenshot 01",
     screenshotCaption: "Screenshots — 3 slots",
     skillsLabel: "Skills",
@@ -246,6 +248,7 @@ export const copy: Record<Lang, Copy> = {
       },
     ],
     workLabel: "Projetos selecionados",
+    tiltPrompt: "Incline para ver",
     screenshotLead: "Captura 01",
     screenshotCaption: "Capturas — 3 espaços",
     skillsLabel: "Competências",
