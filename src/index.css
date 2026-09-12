@@ -434,8 +434,60 @@ a:hover {
   transform: translateY(-50%) scale(1);
 }
 
+/* Touch has no hover, so the object sits nearer the edge and stays smaller:
+   it shares the row with the title instead of a wide empty margin. */
+.work__object--roulette {
+  right: clamp(48px, 13vw, 64px);
+  width: clamp(118px, 32vw, 180px);
+  height: clamp(118px, 32vw, 180px);
+}
+
+/* Keeps the title clear of where the object lands. */
+@media (hover: none) {
+  .row__title {
+    padding-right: clamp(125px, 33vw, 210px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .work__object {
+    transition: none;
+  }
+}
+
+/* ── Roulette marker (touch only, see Work.tsx) ─────────────────────────── */
+/* A fixed pointer at the left edge. Whichever row scrolls past it shows its
+   object, so the list ticks by like a prize wheel. Work.tsx sets `top`. */
+.marker {
+  position: fixed;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-10px, -50%);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.marker.is-visible {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* Solid triangle pointing at the list. */
+.marker__arrow {
+  width: 0;
+  height: 0;
+  border-left: 9px solid var(--accent);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker {
     transition: none;
   }
 }

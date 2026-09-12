@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy, useEffect, useState } from "react";
+import { Fragment, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
@@ -9,6 +9,11 @@ const modelOf = (project: Project) => project.model ?? settings.defaultModel;
 const styleOf = (project: Project) =>
   project.modelStyle ?? settings.modelStyle;
 const models = [...new Set(projects.map(modelOf))];
+
+// Height of the roulette marker, as a fraction of the viewport. The arrow is
+// drawn at the same line (see `marker` below), so whichever row sits under it
+// owns the object.
+const MARKER = 0.45;
 
 type Active = {
   id: number;
@@ -27,17 +32,42 @@ export function Work({ lang }: { lang: Lang }) {
   const [active, setActive] = useState<Active | null>(null);
   // Mount the canvas once the page is idle, so even the first hover is instant.
   const [warm, setWarm] = useState(false);
+  // Without hover there is nothing to point at a row, so scrolling drives the
+  // object instead: a fixed arrow marks a line, and the row crossing it wins.
+  const [roulette, setRoulette] = useState(
+    () => !window.matchMedia("(hover: hover)").matches,
+  );
+  const rows = useRef(new Map<number, HTMLElement>());
+  const list = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Touch screens never hover, so they skip the three.js and model download.
-    if (!window.matchMedia("(hover: hover)").matches) return;
+    const query = window.matchMedia("(hover: hover)");
+    const sync = () => setRoulette(!query.matches);
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (roulette) return;
     if (!("requestIdleCallback" in window)) {
       const timer = setTimeout(() => setWarm(true), 1000);
       return () => clearTimeout(timer);
     }
     const handle = requestIdleCallback(() => setWarm(true), { timeout: 3000 });
     return () => cancelIdleCallback(handle);
-  }, []);
+  }, [roulette]);
+
+  // On touch the download is not free, so it waits until the list is nearly
+  // in view instead of starting on idle.
+  useEffect(() => {
+    if (!roulette || warm || !list.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => entry.isIntersecting && setWarm(true),
+      { rootMargin: "60% 0px" },
+    );
+    observer.observe(list.current);
+    return () => observer.disconnect();
+  }, [roulette, warm]);
 
   const toggle = (id: number) =>
     setOpen((current) =>
@@ -48,48 +78,100 @@ export function Work({ lang }: { lang: Lang }) {
         : { ...current, [id]: !current[id] },
     );
 
-  const activate = (project: Project, row: HTMLElement) =>
-    setActive({
-      id: project.id,
-      url: modelOf(project),
-      style: styleOf(project),
-      top: row.offsetTop + row.offsetHeight / 2,
-      live: true,
-    });
+  // Returns the same object when nothing moved, so the scroll driver can call
+  // this every frame without re-rendering.
+  const activate = useCallback((project: Project, row: HTMLElement) => {
+    const top = row.offsetTop + row.offsetHeight / 2;
+    setActive((current) =>
+      current?.id === project.id && current.live && current.top === top
+        ? current
+        : {
+            id: project.id,
+            url: modelOf(project),
+            style: styleOf(project),
+            top,
+            live: true,
+          },
+    );
+  }, []);
   const deactivate = (id: number) =>
     setActive((current) =>
       current?.id === id ? { ...current, live: false } : current,
     );
 
+  // `open` is a dependency: opening a panel pushes the rows below it past the
+  // marker without a scroll event.
+  useEffect(() => {
+    if (!roulette) return;
+    let frame = 0;
+    const pick = () => {
+      frame = 0;
+      const line = window.innerHeight * MARKER;
+      for (const project of projects) {
+        const row = rows.current.get(project.id);
+        if (!row) continue;
+        const box = row.getBoundingClientRect();
+        if (box.top <= line && box.bottom > line) return activate(project, row);
+      }
+      setActive((current) =>
+        current?.live ? { ...current, live: false } : current,
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(pick);
+    };
+    pick();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [roulette, activate, open]);
+
   const visible = !!active?.live && !open[active.id];
 
   return (
     <section className="work">
+      {roulette && (
+        <div
+          className={`marker${active?.live ? " is-visible" : ""}`}
+          style={{ top: `${MARKER * 100}%` }}
+          aria-hidden="true"
+        >
+          <span className="marker__arrow" />
+        </div>
+      )}
       <div className="work__head">
         <span>{t.workLabel}</span>
         <span>{String(projects.length).padStart(2, "0")}</span>
       </div>
-      <div className="work__list">
+      <div className="work__list" ref={list}>
         {projects.map((project, index) => (
           <Fragment key={project.id}>
             <button
               type="button"
+              ref={(node) => {
+                if (node) rows.current.set(project.id, node);
+                else rows.current.delete(project.id);
+              }}
               className={`row${open[project.id] ? " is-open" : ""}`}
               aria-expanded={!!open[project.id]}
               aria-controls={`panel-${project.id}`}
               onClick={(event) => {
                 toggle(project.id);
                 // Rows above may have collapsed since hover, moving this one.
-                activate(project, event.currentTarget);
+                if (!roulette) activate(project, event.currentTarget);
               }}
               onPointerEnter={(event) => {
                 // Touch has no hover, and a tap opens the row, which hides the object.
-                if (event.pointerType !== "touch")
+                if (!roulette && event.pointerType !== "touch")
                   activate(project, event.currentTarget);
               }}
-              onPointerLeave={() => deactivate(project.id)}
-              onFocus={(event) => activate(project, event.currentTarget)}
-              onBlur={() => deactivate(project.id)}
+              onPointerLeave={() => !roulette && deactivate(project.id)}
+              onFocus={(event) => !roulette && activate(project, event.currentTarget)}
+              onBlur={() => !roulette && deactivate(project.id)}
             >
               {settings.showNumbers && (
                 <span className="row__index">
@@ -106,7 +188,7 @@ export function Work({ lang }: { lang: Lang }) {
         ))}
         {(warm || active) && (
           <div
-            className={`work__object${visible ? " is-visible" : ""}`}
+            className={`work__object${roulette ? " work__object--roulette" : ""}${visible ? " is-visible" : ""}`}
             style={active ? { top: active.top } : undefined}
             aria-hidden="true"
           >
