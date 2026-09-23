@@ -59,8 +59,8 @@ export const projects: Project[] = [
       pt: "Prêmio — Melhor Projeto Interdisciplinar, PUC Minas",
     },
     tags: {
-      en: ["Java", "Maven", "Supply chain"],
-      pt: ["Java", "Maven", "Supply chain"],
+      en: ["Python"],
+      pt: ["Python"],
     },
     model: "/wms-brooch-2025.glb",
     modelStyle: "original",
@@ -98,8 +98,8 @@ export const projects: Project[] = [
       pt: "Organizador de notas multiplataforma para desktop e mobile, com sincronização offline-first. Desenvolvido com apoio de agentes de IA.",
     },
     tags: {
-      en: ["React", "TypeScript", "MongoDB", "PouchDB"],
-      pt: ["React", "TypeScript", "MongoDB", "PouchDB"],
+      en: ["React", "TypeScript", "Express", "MongoDB"],
+      pt: ["React", "TypeScript", "Express", "MongoDB"],
     },
     model: "/dokmint-mark.glb",
     modelScale: 0.75,
@@ -108,18 +108,41 @@ export const projects: Project[] = [
     id: 5,
     year: "2025",
     title: {
-      en: "SAtelier — Landing Page Redesign",
-      pt: "SAtelier — Redesign da Landing Page",
+      en: "SAtelier - Landing Page Redesign",
+      pt: "SAtelier - Redesign da Landing Page",
     },
     description: {
       en: "Freelance. Redesigned a software company's outdated landing page, keeping the stack deliberately lightweight at the client's request.",
       pt: "Freelance. Redesign da landing page desatualizada de uma empresa de software, mantendo a stack leve a pedido do cliente.",
     },
     tags: {
-      en: ["HTML", "JavaScript", "Tailwind"],
-      pt: ["HTML", "JavaScript", "Tailwind"],
+      en: ["HTML", "JavaScript", "Tailwind", "Client work"],
+      pt: ["HTML", "JavaScript", "Tailwind", "Cliente real"],
     },
     model: "SAtelier_Logo_3D.glb",
+    screenshots: [
+      {
+        src: "/projects/satelier3.jpg",
+        alt: {
+          en: "The previous landing page before the redesign, with a sidebar menu and dated layout",
+          pt: "A landing page anterior ao redesign, com menu lateral e layout datado",
+        },
+      },
+      {
+        src: "/projects/satelier1.jpg",
+        alt: {
+          en: "Redesigned hero section",
+          pt: "Seção hero redesenhada",
+        },
+      },
+      {
+        src: "/projects/satelier2.jpg",
+        alt: {
+          en: "Argow section presenting the RAD framework, its features and use cases",
+          pt: "Seção do Argow apresentando o framework RAD, seus recursos e casos de uso",
+        },
+      },
+    ],
   },
   {
     id: 6,
@@ -158,22 +181,22 @@ export const projects: Project[] = [
       },
     ],
   },
-  {
-    id: 7,
-    year: "2023",
-    title: {
-      en: "Mining Scraper Blade Wear Detector",
-      pt: "Detector de Desgaste de Lâminas em Mineração",
-    },
-    description: {
-      en: "Hardware prototype for LINK: detects wear on mining conveyor scraper blades, with custom-designed PCBs and C firmware on ESP32.",
-      pt: "Protótipo de hardware para a LINK: detecta desgaste em lâminas raspadoras de esteiras transportadoras na mineração, com PCBs próprias e firmware em C no ESP32.",
-    },
-    tags: {
-      en: ["ESP32", "C", "PCB design"],
-      pt: ["ESP32", "C", "Projeto de PCB"],
-    },
-  },
+  // {
+  //   id: 7,
+  //   year: "2023",
+  //   title: {
+  //     en: "Mining Scraper Blade Wear Detector",
+  //     pt: "Detector de Desgaste de Lâminas em Mineração",
+  //   },
+  //   description: {
+  //     en: "Hardware prototype for LINK: detects wear on mining conveyor scraper blades, with custom-designed PCBs and C firmware on ESP32.",
+  //     pt: "Protótipo de hardware para a LINK: detecta desgaste em lâminas raspadoras de esteiras transportadoras na mineração, com PCBs próprias e firmware em C no ESP32.",
+  //   },
+  //   tags: {
+  //     en: ["ESP32", "C", "PCB design"],
+  //     pt: ["ESP32", "C", "Projeto de PCB"],
+  //   },
+  // },
 ];
 
 type SkillGroup = { label: string; value: string };

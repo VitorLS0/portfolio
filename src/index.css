@@ -602,12 +602,17 @@ a {
   min-width: 0;
 }
 
-/* With 3 slices at 1 : 1 : 6, 14:5 leaves the active one near the
-   screenshots' own ~2:1, so it shows almost uncropped. */
+/* Slices grow 1 : … : 6, so the active one takes 6 / (shots + 5) of the
+   width. Once the images load, the height follows the tallest one so the
+   active slice shows it whole; 14:5 suits three ~2:1 shots until then. */
 .reel__slices {
   display: flex;
   gap: 6px;
   aspect-ratio: 14 / 5;
+}
+
+.reel__slices[style] {
+  aspect-ratio: calc(var(--shot-ratio) * (var(--shots) + 5) / 6);
 }
 
 /* Same easing as the header wordmark reveal. */
@@ -709,6 +714,11 @@ a {
   .reel__slices {
     flex-direction: column;
     aspect-ratio: 4 / 3;
+  }
+
+  /* Stacked, the active slice takes 4 / (shots + 3) of the height. */
+  .reel__slices[style] {
+    aspect-ratio: calc(var(--shot-ratio) * 4 / (var(--shots) + 3));
   }
 
   .reel__slice.is-active {

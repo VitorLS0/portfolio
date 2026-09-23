@@ -1,4 +1,5 @@
 import { Fragment, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { Lang, ModelStyle, Project, Screenshot } from "../content";
 import { copy, projects } from "../content";
 import { settings } from "../site.config";
@@ -239,10 +240,19 @@ const pad = (n: number) => String(n).padStart(2, "0");
 // rest stay as dimmed strips. Hover, focus or tap picks one.
 function Gallery({ shots, lang }: { shots: Screenshot[]; lang: Lang }) {
   const [selected, setSelected] = useState(0);
+  // Tallest shot's width / height, so the reel fits every image uncropped.
+  const [ratio, setRatio] = useState<number>();
 
   return (
     <figure className="reel">
-      <div className="reel__slices">
+      <div
+        className="reel__slices"
+        style={
+          ratio
+            ? ({ "--shot-ratio": ratio, "--shots": shots.length } as CSSProperties)
+            : undefined
+        }
+      >
         {shots.map((shot, i) => (
           <button
             key={shot.src}
@@ -256,7 +266,15 @@ function Gallery({ shots, lang }: { shots: Screenshot[]; lang: Lang }) {
               if (event.pointerType !== "touch") setSelected(i);
             }}
           >
-            <img src={shot.src} alt="" />
+            <img
+              src={shot.src}
+              alt=""
+              onLoad={(event) => {
+                const { naturalWidth, naturalHeight } = event.currentTarget;
+                const r = naturalWidth / naturalHeight;
+                setRatio((prev) => (prev === undefined ? r : Math.min(prev, r)));
+              }}
+            />
             <span className="reel__index">{pad(i + 1)}</span>
           </button>
         ))}
